@@ -44,8 +44,9 @@ public class CameraTests {
                                   new Vector3d(-0.13811656557506483, -0.14714072701594028, 0.9794250460177998));
         Ray resultRay1 = new Ray();
         perspectiveCam.getRay(resultRay1, u, v);
+        //System.out.println(correctRay1.origin.x+" "+resultRay1.origin.x);
         TestUtils.assertRaysEqual("Testing Perspective camera: u = " + u + ", v = " + v, correctRay1, resultRay1);
-
+        
         u = 0.00234f;
         v = 0.9832f;
         Ray correctRay2 = new Ray(new Vector3d(1.4705511169015408, 0.00566191538843016, 1.8760675818602917),

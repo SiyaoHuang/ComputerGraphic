@@ -1,13 +1,16 @@
 package ray1.camera;
 
 import ray1.Ray;
+import egl.math.Vector3;
 
 public class OrthographicCamera extends Camera {
 
     //TODO#A2: create necessary new variables/objects here, including an orthonormal basis
     //          formed by three basis vectors and any other helper variables 
     //          if needed.
-    
+    public Vector3 u = new Vector3();
+    public Vector3 v = new Vector3();
+    public Vector3 w = new Vector3();
     
     /**
      * Initialize the derived view variables to prepare for using the camera.
@@ -16,8 +19,12 @@ public class OrthographicCamera extends Camera {
         // TODO#A2: Fill in this function.
         // 1) Set the 3 basis vectors in the orthonormal basis, 
         //    based on viewDir and viewUp
-        // 2) Set up the helper variables if needed
-
+    	w.set(this.getViewDir().normalize().mul(-1f));
+    	//System.out.println(w.x+" "+w.y+" "+w.z);
+    	u.set(this.getViewUp().cross(w).normalize());
+    	//System.out.println("u "+u.x+" "+u.y+" "+u.z);
+    	v.set(w.clone().cross(u).normalize());
+    	//System.out.println("v "+v.x+" "+v.y+" "+v.z);
     }
 
     /**
@@ -36,7 +43,14 @@ public class OrthographicCamera extends Camera {
         //    In an orthographic camera, the origin should depend on your transformed
         //    inU and inV and your basis vectors u and v.
         // 3) Set the direction field of outRay for an orthographic camera.
-        
+    	float width = this.getViewWidth();
+    	float height = this.getViewHeight();
+    	inU = inU * width - width /2;
+    	inV = inV * height - height /2;
+    	//System.out.println(inU+" "+inV);
+    	outRay.origin.set(this.getViewPoint().add(this.u.clone().mul(inU)).add(this.v.clone().mul(inV)));
+    	//System.out.println(outRay.origin.x+" "+outRay.origin.y+" "+outRay.origin.z);
+    	outRay.direction.set(this.w.clone().mul(-1f));
     }
 
 }
