@@ -57,6 +57,15 @@ public class Sphere extends Surface {
 	outRecord.normal.set(outRecord.location.clone().sub(this.center).normalize());
 	outRecord.t = t;
 	outRecord.surface = this;
+	double th = Math.acos(outRecord.normal.y);
+	double be = Math.acos(-outRecord.normal.z/Math.sin(th));
+	double v = 1 - th / Math.PI;
+	double u = 0;
+	if( outRecord.normal.x < 0)
+		u = be / (2 * Math.PI);
+	else
+		u = 1 - be / (2 * Math.PI);
+	outRecord.texCoords.set(u, v);
 	return true;
   }
   
