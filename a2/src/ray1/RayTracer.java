@@ -6,7 +6,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import ray1.camera.Camera;
+import ray1.shader.RGBNormals;
 import egl.math.Colorf;
+import egl.math.Vector2;
 
 public class RayTracer {
 	public static class ScenePath {
@@ -249,6 +251,15 @@ public class RayTracer {
 		//    just return the scene's background color.
 		// 2) Get the shader from the intersection record.
 		// 3) Call the shader's shade() method to set the color for this ray.
-				
+		IntersectionRecord inter = new IntersectionRecord();
+		if(!scene.getFirstIntersection(inter, ray)) {
+			outColor.set(scene.backColor.clone());
+		}else {
+			System.out.println(inter.surface.toString());
+			inter.surface.getShader().shade(outColor, scene, ray, inter);
+			//outColor.set(inter.surface.getShader().getTexture().getTexColor(new Vector2(inter.texCoords)));
+		}
+		
+		
 	}
 }

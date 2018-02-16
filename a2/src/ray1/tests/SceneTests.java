@@ -84,6 +84,7 @@ public class SceneTests {
         expectedT = 1.0;
         System.out.println("Testing intersection time.");
         TestUtils.assertDoublesEqual(expectedT, its.t);
+        //System.out.println("it.t "+its.t+"  ++++++++++++++++++++++++++++");
         System.out.println("Testing intersection surface");
         assertTrue(its.surface == sphere1);
         System.out.println("Ray 0 tests passed.\n");
@@ -102,5 +103,4 @@ public class SceneTests {
         assertTrue(its.surface == sphere0);
         System.out.println("Ray 1 tests passed.\n");
     }
-
 }

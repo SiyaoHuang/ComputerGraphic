@@ -36,8 +36,8 @@ public class PerspectiveCamera extends Camera {
         // 1) Set the 3 basis vectors in the orthonormal basis,
         // based on viewDir and viewUp
         // 2) Set up the helper variables if needed
-    	w.set(this.getViewDir().normalize().mul(-1f));
-    	u.set(this.getViewUp().cross(w).normalize());
+    	w.set(this.getViewDir().mul(-1f).normalize());
+    	u.set(this.getViewUp().clone().cross(w).normalize());
     	v.set(w.clone().cross(u).normalize());
     }
 
@@ -59,9 +59,18 @@ public class PerspectiveCamera extends Camera {
         //    as well as the projection distance.
     	float width = this.getViewWidth();
     	float height = this.getViewHeight();
+//    	System.out.println(this.getProjDistance());
+//    	System.out.println(this.getViewHeight()+" "+this.getViewWidth());
     	inU = inU * width - width /2;
     	inV = inV * height - height /2;
     	outRay.origin.set(this.getViewPoint());
-    	outRay.direction.set(this.w.clone().mul(-this.getProjDistance()).add(this.u.clone().mul(inU)).add(this.v.clone().mul(inV)));
+    	outRay.direction.set(this.getViewDir().clone().normalize().mul(this.getProjDistance()).add(this.u.clone().mul(inU)).add(this.v.clone().mul(inV)));
+    	outRay.makeOffsetRay();
+    	outRay.direction.normalize();
+//    	outRay.direction.add(0.2f, 0f, 0f).normalize();
+//    	outRay.origin.add(100f, 100f, 100f);
+//    	outRay.origin.set(outRay.origin.clone().add(outRay.direction.clone().mul(this.getProjDistance())));
+//    	System.out.println(outRay.origin.toString());
+//    	System.out.println(outRay.direction.toString());
     }
 }

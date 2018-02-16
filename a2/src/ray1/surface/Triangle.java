@@ -64,10 +64,10 @@ public class Triangle extends Surface {
   public boolean intersect(IntersectionRecord outRecord, Ray rayIn) {
     // TODO#A2: fill in this function.
 	  //System.out.println("????0");
-	  Vector3 v0 = owner.getMesh().getPosition(face,0);
-	  Vector3 v1 = owner.getMesh().getPosition(face,1);
-	  Vector3 v2 = owner.getMesh().getPosition(face,2);
-	  
+	  Vector3 v0 = owner.getMesh().getPosition(face,0).clone();
+	  Vector3 v1 = owner.getMesh().getPosition(face,1).clone();
+	  Vector3 v2 = owner.getMesh().getPosition(face,2).clone();
+//	  rayIn.direction.normalize();
 	  Matrix3d ss = new Matrix3d(this.a, this.d, rayIn.direction.x,
 				this.b, this.e, rayIn.direction.y,
 				this.c, this.f, rayIn.direction.z);
@@ -91,8 +91,10 @@ public class Triangle extends Surface {
 		  //System.out.println("---");
 		  return false;
 	  }
+	  //System.out.println(sss+" "+bb+" "+rr+" "+tt);
 
 	  double t = tt / sss;
+	  //System.out.println(t);
 	  if( t < rayIn.start || t > rayIn.end) {
 		  //System.out.println("+++");
 		  return false;
@@ -101,11 +103,14 @@ public class Triangle extends Surface {
 	  outRecord.location.set(rayIn.origin.clone().add(rayIn.direction.clone().mul(t)));
 	  outRecord.t = t;
 	  outRecord.surface = this;
+//	  System.out.println(this.getShader().toString());
 	  
 	  Vector3 vp = new Vector3(outRecord.location);
 	  //System.out.println("b"+bb+"r"+rr);
 	  //System.out.println("???3");
-	  if( bb + rr > 1) {
+//	  System.out.println(bb+"++++");
+//	  System.out.println(rr+"----");
+	  if( bb + rr > 1 || bb<0||rr<0) {
 		  //System.out.println("999");
 		  return false;
 	  }
@@ -121,9 +126,9 @@ public class Triangle extends Surface {
 	  double A0 = v1p.clone().cross(v12).len() / 2;
 	  //System.out.println(A+" "+A0+" "+A1+" "+A2);
 	  if(face.hasNormals()) {
-		  Vector3 n0 = owner.getMesh().getNormal(face, 0).clone();
-		  Vector3 n1 = owner.getMesh().getNormal(face, 1).clone();
-		  Vector3 n2 = owner.getMesh().getNormal(face, 2).clone();
+		  Vector3 n0 = owner.getMesh().getNormal(face, 0).clone().normalize();
+		  Vector3 n1 = owner.getMesh().getNormal(face, 1).clone().normalize();
+		  Vector3 n2 = owner.getMesh().getNormal(face, 2).clone().normalize();
 		  outRecord.normal.set(n0.clone().mul((float)(A0/A)).add(n1.clone().mul((float)(A1/A))).add(n2.clone().mul((float)(A2/A)))).normalize();
 		  //System.out.println(outRecord.normal.x+" "+outRecord.normal.y+" "+outRecord.normal.z);
 	  
