@@ -255,9 +255,7 @@ public class RayTracer {
 		if(!scene.getFirstIntersection(inter, ray)) {
 			outColor.set(scene.backColor.clone());
 		}else {
-			System.out.println(inter.surface.toString());
 			inter.surface.getShader().shade(outColor, scene, ray, inter);
-			//outColor.set(inter.surface.getShader().getTexture().getTexColor(new Vector2(inter.texCoords)));
 		}
 		
 		

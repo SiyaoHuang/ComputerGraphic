@@ -124,25 +124,21 @@ public class Triangle extends Surface {
 	  double A1 = v20.clone().cross(v2p).len() / 2;
 	  double A2 = v10.clone().cross(v1p).len() / 2;
 	  double A0 = v1p.clone().cross(v12).len() / 2;
-	  //System.out.println(A+" "+A0+" "+A1+" "+A2);
 	  if(face.hasNormals()) {
 		  Vector3 n0 = owner.getMesh().getNormal(face, 0).clone().normalize();
 		  Vector3 n1 = owner.getMesh().getNormal(face, 1).clone().normalize();
 		  Vector3 n2 = owner.getMesh().getNormal(face, 2).clone().normalize();
 		  outRecord.normal.set(n0.clone().mul((float)(A0/A)).add(n1.clone().mul((float)(A1/A))).add(n2.clone().mul((float)(A2/A)))).normalize();
-		  //System.out.println(outRecord.normal.x+" "+outRecord.normal.y+" "+outRecord.normal.z);
 	  
 	  } else {
 		  outRecord.normal.set(norm);
 	  }
-	  //System.out.println("???4");
 	  if(face.hasUVs()) {
 		  Vector2 t0 = owner.getMesh().getUV(face, 0).clone();
 		  Vector2 t1 = owner.getMesh().getUV(face, 1).clone();
 		  Vector2 t2 = owner.getMesh().getUV(face, 2).clone();		  
 		  outRecord.texCoords.set(t0.clone().mul((float)(A0/A)).add(t1.clone().mul((float)(A1/A)).add(t2.clone().mul((float)(A2/A)))));
 	  }
-	  //outRecord.normal.set(outRecord.location.clone().sub(this.center).normalize());
 	  //outRecord.texCoords.set(u, v);
 	  return true;
   }

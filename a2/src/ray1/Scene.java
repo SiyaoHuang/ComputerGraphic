@@ -148,17 +148,20 @@ public class Scene {
 		Boolean a = false;
 		Ray rayc = new Ray(rayIn);
 		for( Surface sf : surfaces) {
-//			System.out.println(sf.getShader().toString());
-			if(sf.intersect(outRecord, rayc)) {
-				System.out.println(outRecord.toString());
-//				rayc.end = outRecord.t;
-				rayc.makeOffsetSegment(outRecord.t);
+			IntersectionRecord rec = new IntersectionRecord();
+			if(sf.intersect(rec, rayc)) {
+				rayc.end = rec.t;
 				a = true;
+				outRecord.t = rec.t;
+				outRecord.normal.set(rec.normal);
+				outRecord.location.set(rec.location);
+				outRecord.texCoords.set(rec.texCoords);
+				outRecord.surface = rec.surface;
 				if(anyIntersection)
 					return true;
 			}
 		}
-		//System.out.println("++ "+outRecord.t);
+		
 		return a;
 	}
 }

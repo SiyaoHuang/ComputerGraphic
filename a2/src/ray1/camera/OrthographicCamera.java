@@ -47,9 +47,7 @@ public class OrthographicCamera extends Camera {
     	float height = this.getViewHeight();
     	inU = inU * width - width /2;
     	inV = inV * height - height /2;
-    	//System.out.println(inU+" "+inV);
     	outRay.origin.set(this.getViewPoint().add(this.u.clone().mul(inU)).add(this.v.clone().mul(inV)));
-    	//System.out.println(outRay.origin.x+" "+outRay.origin.y+" "+outRay.origin.z);
     	outRay.direction.set(this.w.clone().mul(-1f));
     }
 

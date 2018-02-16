@@ -4,8 +4,6 @@ import ray1.IntersectionRecord;
 import ray1.Ray;
 import ray1.Scene;
 
-import com.sun.scenario.effect.light.Light;
-
 import egl.math.Color;
 import egl.math.Colorf;
 import egl.math.Vector3d;
@@ -50,41 +48,31 @@ public class Lambertian extends Shader {
 		//    the intersection point from the light's position.
 		// 4) Compute the color of the point using the Lambert shading model. Add this value
 		//    to the output.
-//		System.out.println(scene.getShaders().toString());
-//		System.out.println(this.toString());
+
 		outIntensity.set(Color.Black);
 		Vector3d n = record.normal.clone();
-//		int i = 0;
+
 		for(ray1.Light Li : scene.getLights()) {
-//			i++;
-//			if(!(this.getDiffuseColor().r() == 0.5))
-//				System.out.println(this.getDiffuseColor().toString());
+
 			Ray ra = new Ray(ray);
 			IntersectionRecord ro = new IntersectionRecord();
 			ro.set(record);
 			if(!this.isShadowed(scene, Li, ro, ra)) {
-//				System.out.println(this.getDiffuseColor().toString());
-//				System.out.println(Li.intensity.toString());
+
 				Vector3d r = record.location.clone().sub(Li.position).clone().mul(-1f);
 				double irra = n.clone().dot(r.clone().normalize());
-//				System.out.println(irra);
-//				System.out.println(this.toString());
+
 				if( irra >= 0) {
-//					double r_len = r.len();
 					double lin_x = Li.intensity.r();
 					double lin_y = Li.intensity.g();
 					double lin_z = Li.intensity.b();
 					double col_x = lin_x * this.diffuseColor.r() * irra / (r.clone().dot(r) * Math.PI);
 					double col_y = lin_y * this.diffuseColor.g() * irra /  (r.clone().dot(r) * Math.PI);
 					double col_z = lin_z * this.diffuseColor.b() * irra / ( r.clone().dot(r) * Math.PI);
-//					System.out.println(col_x+" "+col_y+" "+col_z+"------------");
 					outIntensity.add((float)col_x, (float)col_y, (float)col_z);
 				}
 			}
 		}
-//		System.out.println(i);
-		//scene.getLights().is
-
 	}
 
 }
