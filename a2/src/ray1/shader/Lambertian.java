@@ -6,6 +6,7 @@ import ray1.Scene;
 
 import egl.math.Color;
 import egl.math.Colorf;
+import egl.math.Vector2;
 import egl.math.Vector3d;
 
 /**
@@ -66,6 +67,10 @@ public class Lambertian extends Shader {
 					double lin_x = Li.intensity.r();
 					double lin_y = Li.intensity.g();
 					double lin_z = Li.intensity.b();
+					if(record.surface.getShader().getTexture() != null) {
+						Vector2 uv = new Vector2(record.texCoords);
+						diffuseColor.set(record.surface.getShader().getTexture().getTexColor(uv));
+					}
 					double col_x = lin_x * this.diffuseColor.r() * irra / (r.clone().dot(r) * Math.PI);
 					double col_y = lin_y * this.diffuseColor.g() * irra /  (r.clone().dot(r) * Math.PI);
 					double col_z = lin_z * this.diffuseColor.b() * irra / ( r.clone().dot(r) * Math.PI);

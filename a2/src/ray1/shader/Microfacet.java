@@ -6,6 +6,9 @@ import ray1.Scene;
 import ray1.shader.BRDF;
 import egl.math.Color;
 import egl.math.Colorf;
+import egl.math.Vector2;
+import egl.math.Vector3;
+import egl.math.Vector3d;
 
 /**
  * Microfacet-based shader
@@ -56,7 +59,42 @@ public class Microfacet extends Shader {
 		// 4) Compute the color of the point using the microfacet shading model. 
 		//	  EvalBRDF method of brdf object should be called to evaluate BRDF value at the shaded surface point.
 		// 5) Add the computed color value to the output.
-		
+		outIntensity.set(Color.Black);
+		Vector3d n = record.normal.clone();
+
+		for(ray1.Light Li : scene.getLights()) {
+
+			Ray ra = new Ray(ray);
+			IntersectionRecord ro = new IntersectionRecord();
+			ro.set(record);
+			if(!this.isShadowed(scene, Li, ro, ra)) {
+
+				Vector3d wi = record.location.clone().sub(Li.position).clone().mul(-1f).normalize();
+				Vector3d wo = ray.origin.clone().sub(record.location.clone()).normalize();
+				double irra = n.clone().dot(wi.clone());
+				if( irra > 0) {
+					Vector3d r = record.location.clone().sub(Li.position).clone().mul(-1f);
+					double cc = 1.0 / (Math.pow(r.len(), 2)) * irra;
+					double dd = brdf.EvalBRDF(new Vector3(wi),new Vector3(wo),new Vector3(n));
+					if(record.surface.getShader().getTexture() != null) {
+						Vector2 uv = new Vector2(record.texCoords);
+						diffuseColor.set(record.surface.getShader().getTexture().getTexColor(uv));
+					}
+					double red = cc * Li.intensity.r() * (this.diffuseColor.r()/Math.PI + this.microfacetColor.r()*dd);
+					double gre = cc * Li.intensity.g() * (this.diffuseColor.g()/Math.PI + this.microfacetColor.g()*dd);
+					double blu = cc * Li.intensity.b() * (this.diffuseColor.b()/Math.PI + this.microfacetColor.b()*dd);
+					outIntensity.add((float)red,(float)gre,(float)blu);
+					/*
+					Vector3d col =new Vector3d(Li.intensity.mul((float)(1.0/Math.pow(r.len(), 2))));
+					col.mul(irra);
+					col.mul(this.diffuseColor.clone().mul((float)(1.0/Math.PI)).clone().add(this.microfacetColor.mul(brdf.EvalBRDF(new Vector3(wi),new Vector3(wo),new Vector3(n)))));
+					System.out.println(brdf.EvalBRDF(new Vector3(wi),new Vector3(wo),new Vector3(n)));
+					outIntensity.add((float)col.x,(float)col.y,(float)col.z);
+					*/
+				}
+			}
+		}
 	}
+	
 
 }

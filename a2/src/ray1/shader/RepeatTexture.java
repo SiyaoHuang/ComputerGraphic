@@ -1,6 +1,7 @@
 package ray1.shader;
 
 import ray1.shader.Texture;
+import egl.math.Color;
 import egl.math.Colorf;
 import egl.math.Vector2;
 
@@ -28,8 +29,22 @@ public class RepeatTexture extends Texture {
 		//    and the image object from the Texture class), convert it to a Colorf, and return it.
 		// NOTE: By convention, UV coordinates specify the lower-left corner of the image as the
 		//    origin, but the ImageBuffer class specifies the upper-left corner as the origin.
-			
-		return new Colorf(0,0,0);
+		double u = texCoord.x;
+		double v =-texCoord.y + 1;
+		int width = image.getWidth();
+		int hight = image.getHeight();
+		int uu = (int)(u * width + 0.5);
+		int vv = (int)(v * hight + 0.5);
+		while( uu < 0)
+			uu += width ;
+		while( uu > width - 1)
+			uu -= width ;
+		while( vv < 0)
+			vv += hight;
+		while( vv > hight - 1)
+			vv -= hight;
+
+		return new Colorf(Color.fromIntRGB(image.getRGB(uu, vv)));
 	}
 
 }
