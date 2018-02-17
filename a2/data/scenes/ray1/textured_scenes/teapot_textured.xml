@@ -13,7 +13,7 @@
   </camera>
   <backColor>.005 .005 .01</backColor>
   <image>
-    50 50
+    200 200
   </image>
   
   <texture name="teapotTex" type="ClampTexture">
