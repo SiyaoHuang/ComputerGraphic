@@ -68,10 +68,8 @@ public class Lambertian extends Shader {
 					double lin_y = Li.intensity.g();
 					double lin_z = Li.intensity.b();
 					try {
-						if(record.surface.getShader().getTexture() != null) {
-							Vector2 uv = new Vector2(record.texCoords);
-							diffuseColor.set(record.surface.getShader().getTexture().getTexColor(uv));
-						}
+						Vector2 uv = new Vector2(record.texCoords);
+						diffuseColor.set(record.surface.getShader().getTexture().getTexColor(uv));
 					}catch(NullPointerException e) {
 						
 					}

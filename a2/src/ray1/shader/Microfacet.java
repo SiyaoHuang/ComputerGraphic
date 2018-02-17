@@ -76,9 +76,12 @@ public class Microfacet extends Shader {
 					Vector3d r = record.location.clone().sub(Li.position).clone().mul(-1f);
 					double cc = 1.0 / (Math.pow(r.len(), 2)) * irra;
 					double dd = brdf.EvalBRDF(new Vector3(wi),new Vector3(wo),new Vector3(n));
-					if(record.surface.getShader().getTexture() != null) {
+					try {
 						Vector2 uv = new Vector2(record.texCoords);
 						diffuseColor.set(record.surface.getShader().getTexture().getTexColor(uv));
+
+					}catch(NullPointerException e) {
+						
 					}
 					double red = cc * Li.intensity.r() * (this.diffuseColor.r()/Math.PI + this.microfacetColor.r()*dd);
 					double gre = cc * Li.intensity.g() * (this.diffuseColor.g()/Math.PI + this.microfacetColor.g()*dd);
