@@ -33,23 +33,32 @@ public class TranslationManipulator extends Manipulator {
 		System.out.println("---------------------");
 		Matrix4 viewinv = viewProjection.clone().invert();
 		Vector3 l = viewinv.mulPos(new Vector3(lastMousePos.x,lastMousePos.y,1f)).normalize();
+		Vector3 l0 = viewinv.mulPos(new Vector3(lastMousePos.x,lastMousePos.y,-1f)).normalize();
+		l0.sub(l);
 		Vector3 c = viewinv.mulPos(new Vector3(curMousePos.x,curMousePos.y,1f)).normalize();
-		Vector3 camd = viewinv.mulPos(new Vector3(0f,0f,1f)).normalize();
+		Vector3 c0 = viewinv.mulPos(new Vector3(curMousePos.x,curMousePos.y,-1f)).normalize();
+		c0.sub(c);
+		
+		Vector3 camd = viewinv.mulPos(new Vector3(0f,0f,1f));
 		Vector3 cam = viewinv.mulPos(new Vector3(0f,0f,-1f));
+		camd.sub(cam).normalize();
 		Vector3 or = this.reference.translation.mulPos(new Vector3(0f,0f,0f));
 		switch(this.axis) {
 		case X:{
 			Vector3 b1 = new Vector3(1f,0f,0f);
 			Vector3 b2 = b1.clone().cross(camd);
+
 			if(b2.len()==0)
 				return;
 			b2.normalize();
-			Vector3 tl = help(b1,b2,l,or,cam);
-			Vector3 tc = help(b1,b2,c,or,cam);
+//			System.out.println(b1);
+//			System.out.println(b2);
+			Vector3 tl = help(b1,b2,l,or,l0);
+			Vector3 tc = help(b1,b2,c,or,c0);
+			System.out.println(b1.clone().mul(tl.x).add(b2.mul(tl.y)).add(or));
+			System.out.println(l0.clone().add(l.mul(tl.z)));
 			float dis = tc.x - tl.x;
-			System.out.println("b2 "+b2);
-			System.out.println(tl);
-			this.reference.translation.m[12] += dis/1.1;
+			this.reference.translation.m[12] += dis;
 			break;
 		}
 		case Y:{
@@ -58,12 +67,12 @@ public class TranslationManipulator extends Manipulator {
 			if(b2.len()==0)
 				return;
 			b2.normalize();
-			Vector3 tl = help(b1,b2,l,or,cam);
-			Vector3 tc = help(b1,b2,c,or,cam);
+			Vector3 tl  = help(b1,b2,l0,or,l);
+			Vector3 tc = help(b1,b2,c0,or,c);
 			System.out.println("b2 "+b2);
 			System.out.println(tl);
 			float dis = tc.x - tl.x;
-//			this.reference.translation.m[13] += dis;
+			this.reference.translation.m[13] += dis;
 			break;
 		}
 		case Z:{
