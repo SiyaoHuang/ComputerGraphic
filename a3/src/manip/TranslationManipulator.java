@@ -30,15 +30,14 @@ public class TranslationManipulator extends Manipulator {
 		// Note that the mouse positions are given in coordinates that are normalized to the range [-1, 1]
 		//   for both X and Y. That is, the origin is the center of the screen, (-1,-1) is the bottom left
 		//   corner of the screen, and (1, 1) is the top right corner of the screen.
-		System.out.println("---------------------");
+//		System.out.println("---------------------");
 		Matrix4 viewinv = viewProjection.clone().invert();
-		Vector3 l = viewinv.mulPos(new Vector3(lastMousePos.x,lastMousePos.y,1f)).normalize();
-		Vector3 l0 = viewinv.mulPos(new Vector3(lastMousePos.x,lastMousePos.y,-1f)).normalize();
-		l0.sub(l);
-		Vector3 c = viewinv.mulPos(new Vector3(curMousePos.x,curMousePos.y,1f)).normalize();
-		Vector3 c0 = viewinv.mulPos(new Vector3(curMousePos.x,curMousePos.y,-1f)).normalize();
-		c0.sub(c);
-		
+		Vector3 l = viewinv.mulPos(new Vector3(lastMousePos.x,lastMousePos.y,1f));
+		Vector3 l0 = viewinv.mulPos(new Vector3(lastMousePos.x,lastMousePos.y,-1f));
+		l.sub(l0);
+		Vector3 c = viewinv.mulPos(new Vector3(curMousePos.x,curMousePos.y,1f));
+		Vector3 c0 = viewinv.mulPos(new Vector3(curMousePos.x,curMousePos.y,-1f));
+		c.sub(c0);
 		Vector3 camd = viewinv.mulPos(new Vector3(0f,0f,1f));
 		Vector3 cam = viewinv.mulPos(new Vector3(0f,0f,-1f));
 		camd.sub(cam).normalize();
@@ -51,12 +50,8 @@ public class TranslationManipulator extends Manipulator {
 			if(b2.len()==0)
 				return;
 			b2.normalize();
-//			System.out.println(b1);
-//			System.out.println(b2);
 			Vector3 tl = help(b1,b2,l,or,l0);
 			Vector3 tc = help(b1,b2,c,or,c0);
-			System.out.println(b1.clone().mul(tl.x).add(b2.mul(tl.y)).add(or));
-			System.out.println(l0.clone().add(l.mul(tl.z)));
 			float dis = tc.x - tl.x;
 			this.reference.translation.m[12] += dis;
 			break;
@@ -67,19 +62,21 @@ public class TranslationManipulator extends Manipulator {
 			if(b2.len()==0)
 				return;
 			b2.normalize();
-			Vector3 tl  = help(b1,b2,l0,or,l);
-			Vector3 tc = help(b1,b2,c0,or,c);
-			System.out.println("b2 "+b2);
-			System.out.println(tl);
+			Vector3 tl  = help(b1,b2,l,or,l0);
+			Vector3 tc = help(b1,b2,c,or,c0);
 			float dis = tc.x - tl.x;
 			this.reference.translation.m[13] += dis;
 			break;
 		}
 		case Z:{
-			Vector3 b = viewProjection.mulPos(new Vector3(0f,0f,1f));
-			Vector2 bb= new Vector2(b.x,b.y);
-			float bl = bb.len();
-			float dis = (curMousePos.sub(lastMousePos).dot(bb))/(bl*bl);
+			Vector3 b1 = new Vector3(0f,0f,1f);
+			Vector3 b2 = b1.clone().cross(camd);
+			if(b2.len()==0)
+				return;
+			b2.normalize();
+			Vector3 tl  = help(b1,b2,l,or,l0);
+			Vector3 tc = help(b1,b2,c,or,c0);
+			float dis = tc.x - tl.x;
 			this.reference.translation.m[14] += dis;
 			break;
 		}
@@ -104,8 +101,8 @@ public class TranslationManipulator extends Manipulator {
 		double s11 = s1.determinant();
 		double s22 = s2.determinant();
 		double srr = sr.determinant();
-		
-		return new Vector3((float)(s11/sll),(float)(s22/sll),(float)(srr/sll));
+		Vector3 ans = new Vector3((float)(s11/sll),(float)(s22/sll),(float)(srr/sll)); 
+		return ans;
 	}
 
 	@Override
