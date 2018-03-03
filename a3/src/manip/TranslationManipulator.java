@@ -30,7 +30,73 @@ public class TranslationManipulator extends Manipulator {
 		// Note that the mouse positions are given in coordinates that are normalized to the range [-1, 1]
 		//   for both X and Y. That is, the origin is the center of the screen, (-1,-1) is the bottom left
 		//   corner of the screen, and (1, 1) is the top right corner of the screen.
+		System.out.println("---------------------");
+		Matrix4 viewinv = viewProjection.clone().invert();
+		Vector3 l = viewinv.mulPos(new Vector3(lastMousePos.x,lastMousePos.y,1f)).normalize();
+		Vector3 c = viewinv.mulPos(new Vector3(curMousePos.x,curMousePos.y,1f)).normalize();
+		Vector3 camd = viewinv.mulPos(new Vector3(0f,0f,1f)).normalize();
+		Vector3 cam = viewinv.mulPos(new Vector3(0f,0f,-1f));
+		Vector3 or = this.reference.translation.mulPos(new Vector3(0f,0f,0f));
+		switch(this.axis) {
+		case X:{
+			Vector3 b1 = new Vector3(1f,0f,0f);
+			Vector3 b2 = b1.clone().cross(camd);
+			if(b2.len()==0)
+				return;
+			b2.normalize();
+			Vector3 tl = help(b1,b2,l,or,cam);
+			Vector3 tc = help(b1,b2,c,or,cam);
+			float dis = tc.x - tl.x;
+			System.out.println("b2 "+b2);
+			System.out.println(tl);
+			this.reference.translation.m[12] += dis/1.1;
+			break;
+		}
+		case Y:{
+			Vector3 b1 = new Vector3(0f,1f,0f);
+			Vector3 b2 = b1.clone().cross(camd);
+			if(b2.len()==0)
+				return;
+			b2.normalize();
+			Vector3 tl = help(b1,b2,l,or,cam);
+			Vector3 tc = help(b1,b2,c,or,cam);
+			System.out.println("b2 "+b2);
+			System.out.println(tl);
+			float dis = tc.x - tl.x;
+//			this.reference.translation.m[13] += dis;
+			break;
+		}
+		case Z:{
+			Vector3 b = viewProjection.mulPos(new Vector3(0f,0f,1f));
+			Vector2 bb= new Vector2(b.x,b.y);
+			float bl = bb.len();
+			float dis = (curMousePos.sub(lastMousePos).dot(bb))/(bl*bl);
+			this.reference.translation.m[14] += dis;
+			break;
+		}
+		}
 
+	}
+
+	private Vector3 help(Vector3 b1, Vector3 b2, Vector3 l, Vector3 a, Vector3 b) {
+		Matrix3d sl = new Matrix3d(b1.x, b2.x, -l.x,
+				b1.y, b2.y, -l.y,
+				b1.z, b2.z, -l.z);
+		Matrix3d s1 = new Matrix3d(b.x-a.x, b2.x, -l.x,
+				b.y-a.y, b2.y, -l.y,
+				b.z-a.z, b2.z, -l.z);
+		Matrix3d s2 = new Matrix3d(b.x, b.x-a.x, -l.x,
+				b1.y, b.y-a.y, -l.y,
+				b1.z, b.z-a.z, -l.z);
+		Matrix3d sr = new Matrix3d(b1.x, b2.x, b.x-a.x,
+				b1.y, b2.y, b.y-a.y,
+				b1.z, b2.z, b.z-a.z);
+		double sll = sl.determinant();
+		double s11 = s1.determinant();
+		double s22 = s2.determinant();
+		double srr = sr.determinant();
+		
+		return new Vector3((float)(s11/sll),(float)(s22/sll),(float)(srr/sll));
 	}
 
 	@Override
