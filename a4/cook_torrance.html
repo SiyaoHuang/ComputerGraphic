@@ -113,14 +113,11 @@ void main() {
     float M_E = 2.71828182845904523536028747135266250;
     float M_PI = 3.14159265359;
 
-
     for ( int i = 0; i < NUM_LIGHTS; i++){
       float r = length(lightPositions[i] - vPosition.xyz);
       vec3 L = normalize(lightPositions[i] - vPosition.xyz);
       vec3 H = normalize(L + V);
       float F0 = 0.04;
-
-
       float m = roughness;
       float DNH = dot(N, H);
       float DNV = dot(N, V);
@@ -130,9 +127,10 @@ void main() {
       float D_D = 1.0 /( m * m * pow(DNH, 4.0));
       float D_U = pow(M_E, (DNH * DNH - 1.0) / ( m * m * DNH * DNH));
       float D = D_U * D_D;
-      vec3 k_d = from_sRGB(texture2D(diffuseTexture, vUv).rgb) / M_PI;
+      vec3 k_d = from_sRGB(texture2D(diffuseTexture, vUv).rgb) * max(DNL, 0.0) / M_PI;
       // not sure---------------------
-      vec3 k_s = vec3(1.0,1.0,1.0);
+      //vec3 k_s = vec3(1.0,1.0,1.0);
+      float k_s = 1.0;
       //---------------------------------
       float G = min( min(1.0, 2.0 * DNH * DNV / DVH), 2.0 * DNH * DNL / DVH);
       finalColor += ( k_s * F / M_PI * D * G / ( DNV * DNL) + k_d) * max(DNL, 0.0) * lightColors[i] / (r * r);
