@@ -127,7 +127,7 @@ void main() {
       float D_D = 1.0 /( m * m * pow(DNH, 4.0));
       float D_U = pow(M_E, (DNH * DNH - 1.0) / ( m * m * DNH * DNH));
       float D = D_U * D_D;
-      vec3 k_d = from_sRGB(texture2D(diffuseTexture, vUv).rgb) * max(DNL, 0.0) / M_PI;
+      vec3 k_d = from_sRGB(texture2D(diffuseTexture, vUv).rgb) / M_PI;
       // not sure---------------------
       //vec3 k_s = vec3(1.0,1.0,1.0);
       float k_s = 1.0;

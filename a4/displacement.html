@@ -78,13 +78,23 @@ uniform sampler2D displacementMap; // The displacement should be proportional to
 uniform float displacementScale; // Multiply all displacements by this.
 
 // TODO#A4: Declare any varyings here.
+varying vec2 vUv; // UV
+varying vec3 vNormal; // Normal in eye space
+varying vec4 vPosition; // Position in eye space
 
 void main() {
-    // TODO#A4: Compute the displaced vertex position. 
-    // This should move the vertex along its normal by 
-    // the average of the red, green, and blue channels of displacementMap, 
+    // TODO#A4: Compute the displaced vertex position.
+    // This should move the vertex along its normal by
+    // the average of the red, green, and blue channels of displacementMap,
     // times displacementScale.
-    gl_Position = vec4(1.0); // placeholder
+    vUv = uv;
+    vec3 normalM = texture2D(displacementMap, vUv).rgb;
+    vec3 position_d = position + normal * ( normalM.r + normalM.g + normalM.b) / 3.0 * displacementScale;
+    vPosition = modelViewMatrix * vec4(position_d, 1.0);
+    // calculate projected point
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position_d,1.0); // placeholder
+    vNormal = normalize((normalMatrix * normal).xyz);
+
 }
         </script>
 <!-----------------------------------------------------------------------------
@@ -100,13 +110,34 @@ uniform float roughness; // For Phong or Cook-Torrance.
 uniform sampler2D diffuseTexture; // k_d, the diffuse color. Use texture2D to look up into this.
 
 // TODO#A4: Declare any varyings here.
+varying vec2 vUv; // UV
+varying vec3 vNormal; // Normal in eye space
+varying vec4 vPosition; // Position in eye space
 
 vec3 to_sRGB(vec3 c) { return pow(c, vec3(1.0/2.2)); }
 vec3 from_sRGB(vec3 c) { return pow(c, vec3(2.2)); }
 
 void main() {
     // TODO#A4: Implement a reflectance function here. Either Phong or Cook-Torrance is fine.
-    gl_FragColor = vec4(1.0); // placeholder
+    vec3 N = normalize(vNormal);
+    vec3 V = normalize(-vPosition.xyz);
+
+    vec3 finalColor = vec3(0.0, 0.0, 0.0);
+
+    for (int i = 0; i < NUM_LIGHTS; i++) {
+        float r = length(lightPositions[i] - vPosition.xyz);
+        vec3 L = normalize(lightPositions[i] - vPosition.xyz);
+        vec3 H = normalize(L + V);
+
+        // calculate diffuse term
+        vec3 Idiff = from_sRGB(texture2D(diffuseTexture, vUv).rgb) * max(dot(N, L), 0.0);
+
+        // calculate specular term
+        vec3 Ispec = vec3(1.0) * pow(max(dot(N, H), 0.0), 1.0 / roughness);
+
+        finalColor += lightColors[i] * (Idiff + Ispec) / (r*r);
+    }
+    gl_FragColor = vec4(to_sRGB(finalColor * exposure), 1.0);
 }
         </script>
 <!-----------------------------------------------------------------------------
@@ -117,15 +148,15 @@ void main() {
             commonInit();
             init();
             animate();
-            
+
             function init() {
                 defaultTextureTarget = 'diffuseTexture';
                 meshMaterial.uniforms.diffuseTexture = { type: 't', value: null };
                 meshMaterial.uniforms.displacementMap = { type: 't', value: null };
-            
+
                 addLight(new THREE.Vector3(50, 50, 100), new THREE.Vector3(0.8, 0.8, 0.8));
                 addLight(new THREE.Vector3(-50, -50, -50), new THREE.Vector3(0.5, 0.5, 0.6));
-                
+
                 document.getElementById('roughnessRange').oninput();
                 document.getElementById('displacementScaleRange').oninput();
             }
