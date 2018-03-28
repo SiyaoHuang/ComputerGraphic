@@ -1,0 +1,16 @@
+TIME:                         Wed Mar 28 15:04:05 EDT 2018
+
+=== Java System Properties ===
+java.version:                 1.8.0_162
+java.runtime.name:            Java(TM) SE Runtime Environment
+java.vm.name:                 Java HotSpot(TM) 64-Bit Server VM
+java.vm.version:              25.162-b12
+os.name:                      Windows 10
+os.version:                   10.0
+
+====== OpenGL Properties =====
+GL_VENDOR:                    Intel
+GL_VERSION:                   4.5.0 - Build 22.20.16.4749
+GL_RENDERER:                  Intel(R) UHD Graphics 620
+GL_SHADING_LANGUAGE_VERSION:  4.50 - Build 22.20.16.4749
+

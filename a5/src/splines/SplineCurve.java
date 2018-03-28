@@ -5,6 +5,7 @@ import mesh.OBJFace;
 import mesh.OBJMesh;
 import mesh.OBJMesh_Archive;
 import egl.NativeMem;
+import egl.math.Matrix3;
 import egl.math.Matrix4;
 import egl.math.Vector2;
 import egl.math.Vector3;
@@ -184,7 +185,17 @@ public abstract class SplineCurve {
 	 */
 	private void setBeziers() {
 		//TODO A5
-		
+		this.bezierCurves = new ArrayList<CubicBezier>();
+		ArrayList<Vector2> cP = this.controlPoints;
+		for (int i = 0; i < cP.size() - 3; i++) {
+			this.bezierCurves.add(this.toBezier(cP.get(i), cP.get(i + 1), cP.get(i + 2), cP.get(i + 3), this.epsilon));
+		}
+		if (this.isClosed()) {
+			int i = cP.size() - 3;
+			this.bezierCurves.add(this.toBezier(cP.get(i), cP.get(i + 1), cP.get(i + 2), cP.get(0), this.epsilon));
+			this.bezierCurves.add(this.toBezier(cP.get(i + 1), cP.get(i + 2), cP.get(0), cP.get(1), this.epsilon));
+			this.bezierCurves.add(this.toBezier(cP.get(i + 2), cP.get(0), cP.get(1), cP.get(2), this.epsilon));
+		}
 	}
 	
 	/**
@@ -234,7 +245,52 @@ public abstract class SplineCurve {
 	 */
 	public static void build3DRevolution(SplineCurve crossSection, OBJMesh mesh, float scale, float sliceTolerance) {
 		//TODO A5
-		
+		int slice = (int) (2 * Math.PI / sliceTolerance) + 1;
+		ArrayList<Vector2> csp = crossSection.getPoints();
+		ArrayList<Vector2> csn = crossSection.getNormals();
+		int[][] indic = new int[slice + 1][csp.size() + 1];
+		int count = 0;
+		for (int i = 0; i < slice; i++) {
+			Matrix3 ro = Matrix3.createRotationZ((float) (Math.PI * 2.0 * i / slice));
+			for (int j = 0; j < csp.size(); j++) {
+				Vector3 pp = new Vector3(csp.get(j).x, 0f, csp.get(j).y);
+				Vector3 nn = new Vector3(csn.get(j).x, 0f, csn.get(j).y);
+				pp = ro.mul(pp);
+				nn = ro.mul(nn);
+				mesh.positions.add(pp.mul(scale));
+				mesh.normals.add(nn);
+				indic[i][j] = count;
+				count++;
+			}
+			indic[i][csp.size()] = indic[i][0];
+		}
+		for (int j = 0; j < csp.size() + 1; j++) {
+			indic[slice][j] = indic[0][j];
+		}
+		int round = csp.size();
+		if (!crossSection.isClosed()) {
+			round--;
+		}
+		for (int i = 0; i < slice; i++) {
+			for (int j = 0; j < round; j++) {
+				OBJFace a = new OBJFace(3, false, true);
+				a.normals[1] = indic[i][j];
+				a.normals[0] = indic[i][j + 1];
+				a.normals[2] = indic[i + 1][j];
+				a.positions[1] = indic[i][j];
+				a.positions[0] = indic[i][j + 1];
+				a.positions[2] = indic[i + 1][j];
+				mesh.faces.add(a);
+				OBJFace b = new OBJFace(3, true, true);
+				b.normals[1] = indic[i + 1][j];
+				b.normals[0] = indic[i][j + 1];
+				b.normals[2] = indic[i + 1][j + 1];
+				b.positions[1] = indic[i + 1][j];
+				b.positions[0] = indic[i][j + 1];
+				b.positions[2] = indic[i + 1][j + 1];
+				mesh.faces.add(b);
+			}
+		}
 	}
 }
 

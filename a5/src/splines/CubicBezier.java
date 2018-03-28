@@ -2,6 +2,7 @@ package splines;
 
 import java.util.ArrayList;
 
+import egl.math.Matrix4;
 import egl.math.Vector2;
 /*
  * Cubic Bezier class for the splines assignment
@@ -60,8 +61,44 @@ public class CubicBezier {
      */
     private void tessellate() {
     	 // TODO A5
-    	
-    }
+		this.curvePoints.add(p0);
+		Vector2 cN = p1.clone().sub(p0).normalize();
+		this.curveTangents.add(cN);
+		this.curveNormals.add(new Vector2(cN.y, -cN.x).normalize());
+		tesshelp(p0, p1, p2, p3, 0);
+	}
+
+	public void tesshelp(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3, int count) {
+		Vector2 p01 = p1.clone().sub(p0).normalize();
+		Vector2 p12 = p2.clone().sub(p1).normalize();
+		Vector2 p23 = p3.clone().sub(p2).normalize();
+		double ang1 = Math.acos(p01.dot(p12));
+		double ang2 = Math.acos(p12.dot(p23));
+
+		count++;
+		if (count > 10)
+			return;
+		if (ang1 < this.epsilon && ang2 < this.epsilon) {
+			return;
+		}
+
+		Vector2 p1_0 = p0.clone().mul(0.5f).add(p1.clone().mul(0.5f));
+		Vector2 p1_1 = p1.clone().mul(0.5f).add(p2.clone().mul(0.5f));
+		Vector2 p1_2 = p2.clone().mul(0.5f).add(p3.clone().mul(0.5f));
+		Vector2 p2_0 = p1_0.clone().mul(0.5f).add(p1_1.clone().mul(0.5f));
+		Vector2 p2_1 = p1_1.clone().mul(0.5f).add(p1_2.clone().mul(0.5f));
+		Vector2 p3_0 = p2_0.clone().mul(0.5f).add(p2_1.clone().mul(0.5f));
+
+		tesshelp(p0, p1_0, p2_0, p3_0, count);
+
+		this.curvePoints.add(p3_0);
+		Vector2 cN = p2_1.clone().sub(p3_0).normalize();
+		this.curveTangents.add(cN);
+		this.curveNormals.add(new Vector2(cN.y, -cN.x).normalize());
+
+		tesshelp(p3_0, p2_1, p1_2, p3, count);
+		return;
+	}
 	
     
     /**
