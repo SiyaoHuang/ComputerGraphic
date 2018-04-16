@@ -7,6 +7,7 @@ import egl.math.Matrix3;
 import egl.math.Matrix4;
 import egl.math.Quat;
 import egl.math.Vector3;
+import egl.math.Vector4;
 
 /**
  * A timeline for a particular object in the scene.  The timeline holds
@@ -50,7 +51,9 @@ public class AnimTimeline {
 	 */
 	public void addKeyFrame(int frame, Matrix4 t) {
 		// TODO#A6: Add an AnimKeyframe to frames and set its transformation
-		
+		AnimKeyframe tmp = new AnimKeyframe(frame);
+		tmp.transformation.set(t);
+		frames.add(tmp);
 	}
 	/**
 	 * Remove a keyframe from the timeline.  If the timeline is empty,
@@ -62,7 +65,17 @@ public class AnimTimeline {
 	public void removeKeyFrame(int frame, Matrix4 t) {
 		// TODO#A6: Delete a frame, you might want to use Treeset.remove
 		// If there is no frame after deletion, add back this frame.
-		
+		if(frames.size() != 0) {
+			AnimKeyframe tmp = new AnimKeyframe(frame);
+			tmp.transformation.set(t);
+			frames.remove(tmp);
+		}
+		if(frames.size() == 0) {
+			AnimKeyframe tmp = new AnimKeyframe(frame);
+			tmp.transformation.set(t);
+			frames.add(tmp);
+		}
+			
 	}
 
 	
@@ -99,6 +112,81 @@ public class AnimTimeline {
 		// 1 - Linear interpolation of quaternions,
 		// 2 - Spherical linear interpolation of quaternions.
 		
+		int pre = Integer.MIN_VALUE;
+		Matrix4 prev = new Matrix4();
+		int aft = Integer.MAX_VALUE;
+		Matrix4 aftv = new Matrix4();
 		
+		for(AnimKeyframe tmp : frames) {
+			int tt = tmp.frame;
+			if(tt > pre && tt <= curFrame) {
+				pre = tt;
+				prev.set(tmp.transformation);
+			}
+			if(tt < aft && tt >= curFrame) {
+				aft = tt;
+				aftv.set(tmp.transformation);
+			}
+			if(tt == curFrame) {
+				aft = curFrame;
+				object.transformation.set(tmp.transformation);
+				return;
+			}
+		}
+		
+		if( pre == Integer.MIN_VALUE || aft == Integer.MAX_VALUE )
+			return;
+		
+		float t = (float) ((curFrame - pre) * 1.0 /(aft - pre));
+		
+		
+		 
+		//------------------translate -----------------------
+		Vector3 tprev = prev.getTrans();
+		Vector3 taftv = aftv.getTrans();
+		Vector3 trans = tprev.clone().mul(1f - t).add(taftv.clone().mul(t));
+		Matrix4 tran4 = Matrix4.createTranslation(trans);
+		
+		//------------------scale -----------------------
+		Matrix3 p3 = new Matrix3(prev);
+		Matrix3 a3 = new Matrix3(aftv);
+		Matrix3 Rp3 = new Matrix3();
+		Matrix3 Sp3 = new Matrix3();
+		Matrix3 Ra3 = new Matrix3();
+		Matrix3 Sa3 = new Matrix3();
+		
+		p3.polar_decomp(Rp3, Sp3);
+		a3.polar_decomp(Ra3, Sa3);
+		
+		Vector3 spp = new Vector3(Sp3.m[0],Sp3.m[4],Sp3.m[8]);
+		Vector3 saa = new Vector3(Sa3.m[0],Sa3.m[4],Sa3.m[8]);
+		Vector3 sss = spp.clone().mul(1f-t).add(saa.mul(t));
+		Matrix4 scal4 = Matrix4.createScale(sss);
+		
+		Quat q1 = new Quat(Rp3);
+		Quat q2 = new Quat(Ra3);
+		//------------------rotate -----------------------
+		Matrix4 Rota4 = new Matrix4();
+		switch(rotation) {
+		case 0:{
+			Vector3 eup = eulerDecomp(p3);
+			Vector3 eua = eulerDecomp(a3);
+			Vector3 euu = eup.clone().mul(1f -t).add(eua.mul(t));
+			Rota4 = Matrix4.createRotationX(euu.x).mulBefore(Matrix4.createRotationY(euu.y).mulBefore(Matrix4.createRotationZ(euu.z)));
+			break;
+		}
+		case 1:{
+			Quat q = q1.clone().scale(1 - t).add(q2.scale(t));
+			q.toRotationMatrix(Rota4);
+			break;
+		}
+		case 2:{
+			Quat q = Quat.slerp(q1, q2, t);
+			q.toRotationMatrix(Rota4);
+			break;
+		}
+		}
+		
+		object.transformation.set(tran4.mulBefore(Rota4.mulBefore(scal4)));
 	}
 }
