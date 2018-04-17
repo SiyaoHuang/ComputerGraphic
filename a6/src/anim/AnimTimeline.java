@@ -112,30 +112,52 @@ public class AnimTimeline {
 		// 1 - Linear interpolation of quaternions,
 		// 2 - Spherical linear interpolation of quaternions.
 		
-		int pre = Integer.MIN_VALUE;
-		Matrix4 prev = new Matrix4();
-		int aft = Integer.MAX_VALUE;
-		Matrix4 aftv = new Matrix4();
 		
-		for(AnimKeyframe tmp : frames) {
-			int tt = tmp.frame;
-			if(tt > pre && tt <= curFrame) {
-				pre = tt;
-				prev.set(tmp.transformation);
-			}
-			if(tt < aft && tt >= curFrame) {
-				aft = tt;
-				aftv.set(tmp.transformation);
-			}
-			if(tt == curFrame) {
-				aft = curFrame;
-				object.transformation.set(tmp.transformation);
-				return;
-			}
-		}
-		
-		if( pre == Integer.MIN_VALUE || aft == Integer.MAX_VALUE )
+//		frames.
+		AnimKeyframe cur = new AnimKeyframe(curFrame);
+		AnimKeyframe pp = frames.floor(cur);
+		AnimKeyframe aa = frames.ceiling(cur);
+		if( pp == null && aa == null)
 			return;
+		if( pp == null) {
+			object.transformation.set(aa.transformation);
+			return;
+		}
+		if( aa == null || pp.frame == curFrame) {
+			object.transformation.set(pp.transformation);
+			return;
+		}
+		int pre = pp.frame;
+		Matrix4 prev = pp.transformation;
+		int aft = aa.frame;
+		Matrix4 aftv = aa.transformation;
+		
+//		for(AnimKeyframe tmp : frames) {
+//			int tt = tmp.frame;
+//			if(tt > pre && tt <= curFrame) {
+//				pre = tt;
+//				prev.set(tmp.transformation);
+//			}
+//			if(tt < aft && tt >= curFrame) {
+//				aft = tt;
+//				aftv.set(tmp.transformation);
+//			}
+//			if(tt == curFrame) {
+//				aft = curFrame;
+//				object.transformation.set(tmp.transformation);
+//				return;
+//			}
+//		}
+		
+		//set to keyframe
+//		if( pre == Integer.MIN_VALUE ) {
+//			object.transformation.set(aftv);
+//			return;
+//		}
+//		if( aft == Integer.MAX_VALUE ) {
+//			object.transformation.set(aftv);
+//			return;
+//		}
 		
 		float t = (float) ((curFrame - pre) * 1.0 /(aft - pre));
 		
@@ -157,11 +179,9 @@ public class AnimTimeline {
 		
 		p3.polar_decomp(Rp3, Sp3);
 		a3.polar_decomp(Ra3, Sa3);
-		
-		Vector3 spp = new Vector3(Sp3.m[0],Sp3.m[4],Sp3.m[8]);
-		Vector3 saa = new Vector3(Sa3.m[0],Sa3.m[4],Sa3.m[8]);
-		Vector3 sss = spp.clone().mul(1f-t).add(saa.mul(t));
-		Matrix4 scal4 = Matrix4.createScale(sss);
+		Matrix3 tt = Sp3.clone().interpolate(Sp3, Sa3, t);
+
+		Matrix4 scal4 = new Matrix4(tt);
 		
 		Quat q1 = new Quat(Rp3);
 		Quat q2 = new Quat(Ra3);
