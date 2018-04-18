@@ -119,45 +119,22 @@ public class AnimTimeline {
 		AnimKeyframe aa = frames.ceiling(cur);
 		if( pp == null && aa == null)
 			return;
+		
 		if( pp == null) {
 			object.transformation.set(aa.transformation);
 			return;
 		}
+		
 		if( aa == null || pp.frame == curFrame) {
 			object.transformation.set(pp.transformation);
 			return;
 		}
+		
 		int pre = pp.frame;
-		Matrix4 prev = pp.transformation;
+		Matrix4 prev = pp.transformation.clone();
 		int aft = aa.frame;
-		Matrix4 aftv = aa.transformation;
+		Matrix4 aftv = aa.transformation.clone();
 		
-//		for(AnimKeyframe tmp : frames) {
-//			int tt = tmp.frame;
-//			if(tt > pre && tt <= curFrame) {
-//				pre = tt;
-//				prev.set(tmp.transformation);
-//			}
-//			if(tt < aft && tt >= curFrame) {
-//				aft = tt;
-//				aftv.set(tmp.transformation);
-//			}
-//			if(tt == curFrame) {
-//				aft = curFrame;
-//				object.transformation.set(tmp.transformation);
-//				return;
-//			}
-//		}
-		
-		//set to keyframe
-//		if( pre == Integer.MIN_VALUE ) {
-//			object.transformation.set(aftv);
-//			return;
-//		}
-//		if( aft == Integer.MAX_VALUE ) {
-//			object.transformation.set(aftv);
-//			return;
-//		}
 		
 		float t = (float) ((curFrame - pre) * 1.0 /(aft - pre));
 		
@@ -189,10 +166,13 @@ public class AnimTimeline {
 		Matrix4 Rota4 = new Matrix4();
 		switch(rotation) {
 		case 0:{
-			Vector3 eup = eulerDecomp(p3);
-			Vector3 eua = eulerDecomp(a3);
-			Vector3 euu = eup.clone().mul(1f -t).add(eua.mul(t));
-			Rota4 = Matrix4.createRotationX(euu.x).mulBefore(Matrix4.createRotationY(euu.y).mulBefore(Matrix4.createRotationZ(euu.z)));
+			Vector3 eup = eulerDecomp(Rp3);
+			Vector3 eua = eulerDecomp(Ra3);
+			Vector3 euu = eup.clone().mul(1 -t).add(eua.mul(t));
+			Matrix4 rx = Matrix4.createRotationX(euu.x);
+			Matrix4 ry = Matrix4.createRotationY(euu.y);
+			Matrix4 rz = Matrix4.createRotationZ(euu.z);
+			Rota4 = rx.mulAfter(ry.mulAfter(rz));
 			break;
 		}
 		case 1:{
