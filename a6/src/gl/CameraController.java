@@ -22,7 +22,7 @@ public class CameraController {
 	protected boolean prevFrameButtonDown = false;
 	protected int prevMouseX, prevMouseY;
 	
-	protected boolean orbitMode = false;
+	protected boolean orbitMode = true;
 	public boolean onTimeline = false;
 	
 	public CameraController(Scene s, RenderEnvironment re, RenderCamera c, TimelineViewer t, AnimationEngine e) {
