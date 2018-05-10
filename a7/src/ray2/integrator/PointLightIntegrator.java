@@ -1,5 +1,6 @@
 package ray2.integrator;
 
+import egl.math.Color;
 import egl.math.Colord;
 import egl.math.Vector3d;
 import ray2.IntersectionRecord;
@@ -30,7 +31,29 @@ public class PointLightIntegrator extends Integrator {
 	@Override
 	public void shade(Colord outRadiance, Scene scene, Ray ray, IntersectionRecord iRec, int depth) {
       // TODO#A7: Calculate outRaidance at current shading point.
+		for(Light li_tmp :scene.getLights()) {
+			if(li_tmp.getClass() == PointLight.class) {
+				PointLight li_pl = (PointLight)li_tmp;
+				Vector3d v = ray.direction.clone().mul(-1.0f).normalize();
+				Vector3d li_p = li_pl.position.clone();
+				Vector3d iR_p = iRec.location.clone();
+				Vector3d iR_n = iRec.normal.clone().normalize();
+				Vector3d w = li_p.clone().sub(iR_p);
+				double len = w.len();
+				w.normalize();
+				
+				if(isShadowed(scene, iR_p, li_p)) {
+					continue;
+				}
+				Colord tmpc = new Colord();
+				iRec.surface.getBSDF().eval(w, v, iR_n, tmpc);
+				double costh = Math.max(0, w.dot(iR_n));
+				Vector3d col = li_pl.getIntensity().clone().mul(costh/len/len).mul(tmpc);
+				outRadiance.add(col);
 
+				
+			}
+		}
 	}
 
 	/**

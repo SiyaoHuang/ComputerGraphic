@@ -1,5 +1,7 @@
 package ray2.integrator;
 
+import java.util.Random;
+
 import egl.math.Colord;
 import egl.math.Vector2d;
 import egl.math.Vector3d;
@@ -10,6 +12,8 @@ import ray2.Scene;
 import ray2.light.Environment;
 import ray2.light.Light;
 import ray2.light.LightSamplingRecord;
+import ray2.light.PointLight;
+import ray2.light.RectangleLight;
 import ray2.material.BSDF;
 import ray2.material.BSDFSamplingRecord;
 import ray2.surface.Surface;
@@ -66,8 +70,78 @@ public class LightSamplingIntegrator extends Integrator {
       // You need to add contribution from each light
       // add contribution from environment light if there is any
       // add mirror reflection and refraction 
-	 
-				
+		
+		//---------------------step 0---------------
+		if(iRec.surface.getLight() != null) {
+			iRec.surface.getLight().eval(ray, outRadiance);
+		}
+		Vector3d iR_p = iRec.location.clone();
+		Vector3d iR_n = iRec.normal.clone().normalize();
+		Vector3d v = ray.direction.clone().mul(-1.0f).normalize(); //view direction mul -1
+		Colord brdf = new Colord();
+		double pdf = 0;
+		BSDF bsdf_m = iRec.surface.getBSDF();
+		//---------------------step 1--------------------------------
+		for(Light light : scene.getLights()) {
+			LightSamplingRecord lRec = new LightSamplingRecord(); // lRec light sampling
+			light.sample(lRec, iRec.location);
+			double attenuation = lRec.attenuation;
+			Vector3d w = lRec.direction.normalize();
+			pdf = lRec.probability;
+			if(isShadowed(scene,lRec, iRec, ray)) { //check is shadowed
+				continue;
+			}
+			Colord source_radiance = new Colord();
+			light.eval(ray, source_radiance);
+			bsdf_m.eval(w, v, iR_n, brdf);
+			double costh = Math.max(0, w.dot(iR_n));
+			
+			//(source radiance) * brdf * attenuation * (cos theta) / pdf, and add it
+			Vector3d col_light = source_radiance.clone().mul(brdf).mul(attenuation*costh/pdf);
+			outRadiance.add(col_light);
+			
+		}
+		
+		//---------------------step 2------------------------------
+		Random random = new Random();
+		Vector2d seed = new Vector2d(random.nextDouble(),random.nextDouble());
+		Vector3d outDirection = new Vector3d();
+		Colord outRadiance_environment = Colord.BLACK;
+		if(scene.getEnvironment() != null)
+			pdf = scene.getEnvironment().sample(seed, outDirection, outRadiance_environment);
+		bsdf_m.eval(outDirection, v, iR_n, brdf);
+		double costh = Math.max(0, outDirection.dot(iR_n));
+		Ray envR = new Ray(iRec.location,outDirection);
+		envR.makeOffsetRay();
+		if(!scene.getAnyIntersection(envR)) { //check is shadowed
+			//as (env radiance) * brdf * (cos theta) / pdf, and add it
+			Vector3d col_environment = outRadiance_environment.clone().mul(brdf).mul(costh/pdf);
+			outRadiance.add(col_environment);
+		}
+		
+		//---------------------step 3------------------------------
+		Colord reflect_r = Colord.BLACK;
+		BSDFSamplingRecord bsdfsample = new BSDFSamplingRecord();
+		bsdfsample.dir1 = v;
+		bsdfsample.normal = iR_n;
+//		bsdfsample.isDiscrete = true;
+		pdf = bsdf_m.sample(bsdfsample, seed, brdf);
+//		System.out.println(bsdf_m.getClass());
+//		System.out.println(bsdfsample.isDiscrete);
+		if(bsdfsample.isDiscrete) {
+			
+			if(pdf == 0) {
+				return;
+			}
+			Ray refR = new Ray(iRec.location,bsdfsample.dir2.clone());
+			refR.makeOffsetRay();
+			RayTracer.shadeRay(reflect_r, scene, refR, depth+1);
+
+			costh = Math.abs(bsdfsample.dir2.dot(iR_n));
+			//add the recursive radiance weighted by (cos theta) * (brdf value) / (probability)
+			Vector3d col_reflect = reflect_r.clone().mul(costh/pdf).mul(brdf);
+			outRadiance.add(col_reflect);
+		}
 	}
 
 
