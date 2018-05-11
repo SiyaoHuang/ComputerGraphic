@@ -88,7 +88,7 @@ public class LightSamplingIntegrator extends Integrator {
 			double attenuation = lRec.attenuation;
 			Vector3d w = lRec.direction.normalize();
 			pdf = lRec.probability;
-			if(isShadowed(scene,lRec, iRec, ray)) { //check is shadowed
+			if(isShadowed(scene,lRec, iRec, ray)||pdf == 0) { //check is shadowed
 				continue;
 			}
 			Colord source_radiance = new Colord();
@@ -97,10 +97,8 @@ public class LightSamplingIntegrator extends Integrator {
 			double costh = Math.max(0, w.dot(iR_n));
 			
 			//(source radiance) * brdf * attenuation * (cos theta) / pdf, and add it
-			if(pdf !=0) {
-				Vector3d col_light = source_radiance.clone().mul(brdf).mul(attenuation*costh/pdf);
-				outRadiance.add(col_light);
-			}
+			Vector3d col_light = source_radiance.clone().mul(brdf).mul(attenuation*costh/pdf);
+			outRadiance.add(col_light);
 			
 		}
 		
@@ -124,7 +122,7 @@ public class LightSamplingIntegrator extends Integrator {
 		}
 		
 		//---------------------step 3------------------------------
-		Colord reflect_r = Colord.BLACK;
+		Colord reflect_r = new Colord();
 		BSDFSamplingRecord bsdfsample = new BSDFSamplingRecord();
 		bsdfsample.dir1 = v;
 		bsdfsample.normal = iR_n;
@@ -139,10 +137,10 @@ public class LightSamplingIntegrator extends Integrator {
 
 			costh = Math.abs(bsdfsample.dir2.dot(iR_n));
 			//add the recursive radiance weighted by (cos theta) * (brdf value) / (probability)
-			if(pdf != 0) {
-				Vector3d col_reflect = reflect_r.clone().mul(costh/pdf).mul(brdf);
-				outRadiance.add(col_reflect);
-			}
+			
+			Vector3d col_reflect = reflect_r.clone().mul(costh/pdf).mul(brdf);
+			outRadiance.add(col_reflect);
+			
 		}
 	}
 

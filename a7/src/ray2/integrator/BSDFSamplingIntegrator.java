@@ -88,7 +88,6 @@ public class BSDFSamplingIntegrator extends Integrator {
 		Colord refc = new Colord();
 		if(!scene.getFirstIntersection(record, refR) && scene.getEnvironment() != null) {
 			scene.getEnvironment().eval(bsdfsample.dir2, refc);
-
 		}else {
 
 			if(bsdfsample.isDiscrete) {
@@ -139,5 +138,4 @@ public class BSDFSamplingIntegrator extends Integrator {
 
 		return scene.getAnyIntersection(shadowRay);
 	}
-
 }
