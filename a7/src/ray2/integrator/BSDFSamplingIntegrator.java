@@ -1,11 +1,16 @@
 package ray2.integrator;
 
+import java.util.Random;
+
 import egl.math.Colord;
 import egl.math.Vector2d;
 import egl.math.Vector3d;
 import ray2.IntersectionRecord;
 import ray2.Ray;
+import ray2.RayTracer;
 import ray2.Scene;
+import ray2.light.Light;
+import ray2.light.PointLight;
 import ray2.material.BSDF;
 import ray2.material.BSDFSamplingRecord;
 import ray2.surface.Surface;
@@ -58,7 +63,81 @@ public class BSDFSamplingIntegrator extends Integrator {
       // look up lighting in that direction and get incident radiance.
       // Before you calculate the reflected radiance, you need to check whether the probability value
       // from bsdf sample is 0.
+		//---------------------step 0---------------
+		if(iRec.surface !=null&&iRec.surface.getLight() != null) {
+			iRec.surface.getLight().eval(ray, outRadiance);
+		}
+		//---------------------step 1------------------------------
+		if(iRec.surface == null)
+			return;
+		BSDF bsdf_m = iRec.surface.getBSDF();
+		Vector3d iR_p = iRec.location.clone();
+		Vector3d iR_n = iRec.normal.clone().normalize();
+		Vector3d v = ray.direction.clone().mul(-1.0f).normalize(); //view direction mul -1
+		Colord brdf = new Colord();
+		double pdf = 0;
+		Random random = new Random();
+		Vector2d seed = new Vector2d(random.nextDouble(),random.nextDouble());
+		BSDFSamplingRecord bsdfsample = new BSDFSamplingRecord();
+		bsdfsample.dir1 = v;
+		bsdfsample.normal = iR_n;
+		pdf = bsdf_m.sample(bsdfsample, seed, brdf);
+		IntersectionRecord record = new IntersectionRecord();
+		Ray refR = new Ray(iRec.location,bsdfsample.dir2.clone());
+		refR.makeOffsetRay();
+		Colord refc = new Colord();
+		if(!scene.getFirstIntersection(record, refR) && scene.getEnvironment() != null) {
+			scene.getEnvironment().eval(bsdfsample.dir2, refc);
 
+		}else {
+
+			if(bsdfsample.isDiscrete) {
+				this.shade(outRadiance, scene, refR, record, depth+1);
+			}else {
+				if(record.surface != null &&record.surface.getLight() != null) {
+					record.surface.getLight().eval(refR, refc);
+				}
+			}
+		}
+		double costh = Math.abs(bsdfsample.dir2.dot(iR_n));
+		if(pdf != 0)
+			outRadiance.add(refc.mul(brdf).mul(costh/pdf));
+		
+		//------------------step 2-------------------------------
+		for(Light li_tmp :scene.getLights()) {
+			if(li_tmp.getClass() == PointLight.class) {
+				PointLight li_pl = (PointLight)li_tmp;
+				Vector3d li_p = li_pl.position.clone();
+				Vector3d w = li_p.clone().sub(iR_p);
+				double len = w.len();
+				w.normalize();
+				Ray rayp = new Ray(iR_p,w.clone().normalize());
+				rayp.makeOffsetRay();
+				rayp.makeOffsetSegment(ray.direction.len());
+				if(isShadowed(scene, iR_p, li_p)) {
+					continue;
+				}
+				Colord tmpc = new Colord();
+				iRec.surface.getBSDF().eval(w, v, iR_n, tmpc);
+				costh = Math.max(0, w.dot(iR_n));
+				Vector3d col = li_pl.getIntensity().clone().mul(costh/len/len).mul(tmpc);
+				outRadiance.add(col);
+			}
+		}
+	}
+	protected boolean isShadowed(Scene scene, Vector3d shadingPoint, Vector3d lightPosition) {	
+		
+		Ray shadowRay = new Ray();
+		
+		// Setup the shadow ray to start at surface and end at light
+		shadowRay.origin.set(shadingPoint);
+		shadowRay.direction.set(lightPosition).sub(shadingPoint);
+
+		// Set the ray to end at the light
+		shadowRay.makeOffsetSegment(shadowRay.direction.len());
+		shadowRay.direction.normalize();
+
+		return scene.getAnyIntersection(shadowRay);
 	}
 
 }

@@ -97,8 +97,10 @@ public class LightSamplingIntegrator extends Integrator {
 			double costh = Math.max(0, w.dot(iR_n));
 			
 			//(source radiance) * brdf * attenuation * (cos theta) / pdf, and add it
-			Vector3d col_light = source_radiance.clone().mul(brdf).mul(attenuation*costh/pdf);
-			outRadiance.add(col_light);
+			if(pdf !=0) {
+				Vector3d col_light = source_radiance.clone().mul(brdf).mul(attenuation*costh/pdf);
+				outRadiance.add(col_light);
+			}
 			
 		}
 		
@@ -115,8 +117,10 @@ public class LightSamplingIntegrator extends Integrator {
 		envR.makeOffsetRay();
 		if(!scene.getAnyIntersection(envR)) { //check is shadowed
 			//as (env radiance) * brdf * (cos theta) / pdf, and add it
-			Vector3d col_environment = outRadiance_environment.clone().mul(brdf).mul(costh/pdf);
-			outRadiance.add(col_environment);
+			if(pdf != 0) {
+				Vector3d col_environment = outRadiance_environment.clone().mul(brdf).mul(costh/pdf);
+				outRadiance.add(col_environment);
+			}
 		}
 		
 		//---------------------step 3------------------------------
@@ -124,12 +128,8 @@ public class LightSamplingIntegrator extends Integrator {
 		BSDFSamplingRecord bsdfsample = new BSDFSamplingRecord();
 		bsdfsample.dir1 = v;
 		bsdfsample.normal = iR_n;
-//		bsdfsample.isDiscrete = true;
 		pdf = bsdf_m.sample(bsdfsample, seed, brdf);
-//		System.out.println(bsdf_m.getClass());
-//		System.out.println(bsdfsample.isDiscrete);
 		if(bsdfsample.isDiscrete) {
-			
 			if(pdf == 0) {
 				return;
 			}
@@ -139,8 +139,10 @@ public class LightSamplingIntegrator extends Integrator {
 
 			costh = Math.abs(bsdfsample.dir2.dot(iR_n));
 			//add the recursive radiance weighted by (cos theta) * (brdf value) / (probability)
-			Vector3d col_reflect = reflect_r.clone().mul(costh/pdf).mul(brdf);
-			outRadiance.add(col_reflect);
+			if(pdf != 0) {
+				Vector3d col_reflect = reflect_r.clone().mul(costh/pdf).mul(brdf);
+				outRadiance.add(col_reflect);
+			}
 		}
 	}
 

@@ -50,8 +50,6 @@ public class PointLightIntegrator extends Integrator {
 				double costh = Math.max(0, w.dot(iR_n));
 				Vector3d col = li_pl.getIntensity().clone().mul(costh/len/len).mul(tmpc);
 				outRadiance.add(col);
-
-				
 			}
 		}
 	}
